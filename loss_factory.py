@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch_stoi import NegSTOILoss
 
 
-config = toml.load('config.toml')
+config = toml.load('cfg_train.toml')
 
 
 class loss_mse(nn.Module):
