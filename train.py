@@ -32,21 +32,21 @@ def run(rank, config, args):
         torch.cuda.set_device(rank)
         dist.barrier()
 
-        train_dataset = MyDataset(**config['train_dataset'])
+        train_dataset = MyDataset(**config['train_dataset'], **config['FFT'])
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
         train_dataloader = torch.utils.data.DataLoader(dataset=train_dataset, sampler=train_sampler,
                                                         **config['train_dataloader'], shuffle=False)
         
-        validation_dataset = MyDataset(**config['validation_dataset'])
+        validation_dataset = MyDataset(**config['validation_dataset'], **config['FFT'])
         validation_sampler = torch.utils.data.distributed.DistributedSampler(validation_dataset)
         validation_dataloader = torch.utils.data.DataLoader(dataset=validation_dataset, sampler=validation_sampler,
                                                             **config['validation_dataloader'], shuffle=False)
     else:
-        train_dataset = MyDataset(**config['train_dataset'])
+        train_dataset = MyDataset(**config['train_dataset'], **config['FFT'])
         train_sampler = None
         train_dataloader = torch.utils.data.DataLoader(dataset=train_dataset, **config['train_dataloader'], shuffle=True)
         
-        validation_dataset = MyDataset(**config['validation_dataset'])
+        validation_dataset = MyDataset(**config['validation_dataset'], **config['FFT'])
         validation_dataloader = torch.utils.data.DataLoader(dataset=validation_dataset, **config['validation_dataloader'], shuffle=False)
         
     model = DPCRN(**config['network_config'])
