@@ -63,7 +63,7 @@ if __name__=='__main__':
     from tqdm import tqdm 
     from omegaconf import OmegaConf
     
-    config = OmegaConf.load('configs/cfg_dns3.yaml')
+    config = OmegaConf.load('configs/cfg_train.yaml')
 
         
     train_dataset = DNS3Dataset(**config['train_dataset'])
