@@ -303,7 +303,7 @@ class Trainer:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-C', '--config', default='configs/cfg_dns3.yaml')
+    parser.add_argument('-C', '--config', default='configs/cfg_train.yaml')
     parser.add_argument('-D', '--device', default='0', help='The index of the available devices, e.g. 0,1,2,3')
 
     args = parser.parse_args()
