@@ -1,6 +1,10 @@
 # A code template for training DNN-based speech enhancement models.
 A training code template is highly valuable for deep learning engineers as it can significantly enhance their work efficiency. Despite different programmers have varying coding styles, some are excellent while others may not be as good. My philosophy is to prioritize simplicity. In this context, I am sharing a practical organizational structure for training code files in speech enhancement (SE). The primary focus is on keeping it concise and intuitive rather than aiming for comprehensiveness.
 
+## 🔥 News
+- [**2025-3-31**] Added a new branch named `plus` for better implementation. Please use this one directly.
+- [**2024-5-28**] Added a new branch named `pro` for better implementation.
+
 ## File Specification
 * `configs`: Configuration files for training and infernce.
 * `DNSMOS`: Pre-trained DNSMOS checkpoints from Microsoft.
