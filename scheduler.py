@@ -1,3 +1,9 @@
+# Copyright (c) NXAI GmbH and its affiliates 2024
+# Author: Maximilian Beck
+# Licensed under the Apache License, Version 2.0
+# Adapted from xlstm/experiments/lr_scheduler.py
+# Source: https://github.com/NX-AI/xlstm
+
 import math
 from abc import abstractmethod
 from torch.optim import lr_scheduler
