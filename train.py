@@ -15,11 +15,14 @@ import soundfile as sf
 import torch.distributed as dist
 from torch.utils.tensorboard import SummaryWriter
 from distributed_utils import reduce_value
-
+from torchmetrics.audio import ScaleInvariantSignalDistortionRatio as SISDR
 from models.gtcrn_end2end import GTCRN as Model
 from loss_factory import HybridLoss as Loss
-from dataloader_dns3 import DNS3Dataset as Dataset
+from dataloader import DNS3Dataset as Dataset
 from scheduler import LinearWarmupCosineAnnealingLR as WarmupLR
+import signal
+import socket
+import sys
 
 seed = 43
 random.seed(seed)
@@ -33,11 +36,26 @@ torch.cuda.manual_seed_all(seed)
 
 def run(rank, config, args):
     if args.world_size > 1:
-        os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = '12354'
-        dist.init_process_group("nccl", rank=rank, world_size=args.world_size)
-        torch.cuda.set_device(rank)
-        dist.barrier()
+        try:
+            dist.init_process_group("nccl", rank=rank, world_size=args.world_size)
+            torch.cuda.set_device(rank)
+            dist.barrier()
+        except Exception as e:
+            print(f"Error initializing process group on rank {rank}: {e}", file=sys.stderr)
+            # proceed to allow cleanup in finally
+            raise
+
+    # register quick signal cleanup inside each process
+    def _sig_cleanup(signum, frame):
+        try:
+            if dist.is_available() and dist.is_initialized():
+                dist.destroy_process_group()
+        except Exception:
+            pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _sig_cleanup)
+    signal.signal(signal.SIGTERM, _sig_cleanup)
 
     args.rank = rank
     args.device = torch.device(rank)
@@ -219,7 +237,8 @@ class Trainer:
     def _validation_epoch(self, epoch):
         total_loss = 0
         total_pesq_score = 0
-
+        total_sisdr_score = 0
+        sisdr_metric = SISDR().to(self.device)
         self.validation_bar = tqdm(self.validation_dataloader, ncols=123)
         for step, (noisy, clean) in enumerate(self.validation_bar, 1):
             noisy = noisy.to(self.device)
@@ -232,41 +251,56 @@ class Trainer:
                 loss = reduce_value(loss)
             total_loss += loss.item()
 
-            clean = clean.cpu().numpy()
-            enhanced = enhanced.detach().cpu().numpy()
-            pesq_score_batch = Parallel(n_jobs=-1)(
-                delayed(pesq)(16000, c, e, 'wb') for c, e in zip(clean, enhanced))
-            pesq_score = torch.tensor(pesq_score_batch, device=self.device).mean()
+            # Compute SI-SDR
+            sisdr_score = sisdr_metric(enhanced, clean) - sisdr_metric(noisy, clean) 
             if self.world_size > 1:
-                pesq_score = reduce_value(pesq_score)
-            total_pesq_score += pesq_score
+                sisdr_score = reduce_value(sisdr_score)
+            total_sisdr_score += sisdr_score.item()
+
+            # Compute PESQ
+            clean_np = clean.cpu().numpy()
+            enhanced_np = enhanced.detach().cpu().numpy()
+            # pesq_score_batch = Parallel(n_jobs=-1)(
+            #     delayed(pesq)(16000, c, e, 'wb') for c, e in zip(clean, enhanced))
+            # pesq_score = torch.tensor(pesq_score_batch, device=self.device).mean()
+            # if self.world_size > 1:
+            #     pesq_score = reduce_value(pesq_score)
+            # total_pesq_score += pesq_score
             
             if self.rank == 0 and (epoch==1 or epoch %10 == 0) and step <= 3:
                 noisy_path = os.path.join(self.sample_path, 'sample_{}_noisy.wav'.format(step))
                 clean_path = os.path.join(self.sample_path, 'sample_{}_clean.wav'.format(step))
                 enhanced_path = os.path.join(self.sample_path, 'sample_{}_enh_epoch{}.wav'.format(step, str(epoch).zfill(3)))
                 if not os.path.exists(noisy_path):
-                    noisy = noisy.cpu().numpy()
-                    sf.write(noisy_path, noisy[0], samplerate=self.config['samplerate'])
-                    sf.write(clean_path, clean[0], samplerate=self.config['samplerate'])
+                    noisy_np = noisy.cpu().numpy()
+                    sf.write(noisy_path, noisy_np[0], samplerate=self.config['samplerate'])
+                    sf.write(clean_path, clean_np[0], samplerate=self.config['samplerate'])
 
-                sf.write(enhanced_path, enhanced[0], samplerate=self.config['samplerate'])
+                sf.write(enhanced_path, enhanced_np[0], samplerate=self.config['samplerate'])
 
             self.validation_bar.desc = 'validate[{}/{}][{}]'.format(
                 epoch, self.epochs + self.start_epoch-1, datetime.now().strftime("%Y-%m-%d-%H:%M"))
 
-            self.validation_bar.postfix = 'valid_loss={:.3f}, pesq={:.4f}'.format(
-                total_loss / step, total_pesq_score / step)
-
+            self.validation_bar.postfix = 'loss={:.3f},  SISDRi={:.2f}'.format(
+                total_loss / step,  total_sisdr_score / step)
+            # self.validation_bar.postfix = 'valid_loss={:.3f}, pesq={:.4f}'.format(
+            #     total_loss / step, total_pesq_score / step)
         if (self.world_size > 1) and (self.device != torch.device("cpu")):
             torch.cuda.synchronize(self.device)
 
+        avg_loss = total_loss / step
+        # avg_pesq = total_pesq_score / step
+        avg_sisdr = total_sisdr_score / step
+
         if self.rank == 0:
             self.writer.add_scalars(
-                'val_loss', {'val_loss': total_loss / step, 
-                             'pesq': total_pesq_score / step}, epoch)
+                'val_metrics', {
+                    'val_loss': avg_loss,
+                    # 'pesq': avg_pesq,
+                    'sisdr': avg_sisdr
+                }, epoch)
 
-        return total_loss / step, total_pesq_score / step
+        return avg_loss,  avg_sisdr
 
 
     def train(self):
@@ -281,6 +315,12 @@ class Trainer:
             self._train_epoch(epoch)
 
             self._set_eval_mode()
+        # if epoch % validation_interval == 0:
+        #     self._set_eval_mode()
+        #     valid_loss, score = self._validation_epoch(epoch)
+        # else:
+        #     valid_loss, score = None, None
+            
             valid_loss, score = self._validation_epoch(epoch)
             
             if self.config['scheduler']['update_interval'] == 'epoch':
@@ -304,13 +344,22 @@ class Trainer:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-C', '--config', default='configs/cfg_train.yaml')
-    parser.add_argument('-D', '--device', default='0', help='The index of the available devices, e.g. 0,1,2,3')
+    parser.add_argument('-D', '--device', default='0,1,2,3', help='The index of the available devices, e.g. 0,1,2,3')
 
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device
     args.world_size = len(args.device.split(','))
     config = OmegaConf.load(args.config)
-    
+    # If using distributed training, pick a free port to avoid EADDRINUSE from previous runs
+    if args.world_size > 1:
+        # find a free port by binding to port 0
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('127.0.0.1', 0))
+            free_port = s.getsockname()[1]
+        os.environ['MASTER_ADDR'] = '127.0.0.1'
+        os.environ['MASTER_PORT'] = str(free_port)
+        print(f"Using MASTER_ADDR={os.environ['MASTER_ADDR']} MASTER_PORT={os.environ['MASTER_PORT']}")
+     
     if args.world_size > 1:
         torch.multiprocessing.spawn(
             run, args=(config, args,), nprocs=args.world_size, join=True)

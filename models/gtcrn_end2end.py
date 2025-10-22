@@ -228,12 +228,13 @@ class DPGRNN(nn.Module):
 class Encoder(nn.Module):
     def __init__(self):
         super().__init__()
+        self.channelsize = 32
         self.en_convs = nn.ModuleList([
-            ConvBlock(3*3, 16, (1,5), stride=(1,2), padding=(0,2), use_deconv=False, is_last=False),
-            ConvBlock(16, 16, (1,5), stride=(1,2), padding=(0,2), groups=2, use_deconv=False, is_last=False),
-            GTConvBlock(16, 16, (3,3), stride=(1,1), padding=(0,1), dilation=(1,1), use_deconv=False),
-            GTConvBlock(16, 16, (3,3), stride=(1,1), padding=(0,1), dilation=(2,1), use_deconv=False),
-            GTConvBlock(16, 16, (3,3), stride=(1,1), padding=(0,1), dilation=(5,1), use_deconv=False)
+            ConvBlock(3*3, 24, (1,5), stride=(1,2), padding=(0,2), use_deconv=False, is_last=False),
+            ConvBlock(24, self.channelsize, (1,5), stride=(1,2), padding=(0,2), groups=2, use_deconv=False, is_last=False),
+            GTConvBlock(self.channelsize, self.channelsize, (3,3), stride=(1,1), padding=(0,1), dilation=(1,1), use_deconv=False),
+            GTConvBlock(self.channelsize, self.channelsize, (3,3), stride=(1,1), padding=(0,1), dilation=(2,1), use_deconv=False),
+            GTConvBlock(self.channelsize, self.channelsize, (3,3), stride=(1,1), padding=(0,1), dilation=(5,1), use_deconv=False)
         ])
 
     def forward(self, x):
@@ -247,12 +248,13 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self):
         super().__init__()
+        self.channelsize = 32
         self.de_convs = nn.ModuleList([
-            GTConvBlock(16, 16, (3,3), stride=(1,1), padding=(2*5,1), dilation=(5,1), use_deconv=True),
-            GTConvBlock(16, 16, (3,3), stride=(1,1), padding=(2*2,1), dilation=(2,1), use_deconv=True),
-            GTConvBlock(16, 16, (3,3), stride=(1,1), padding=(2*1,1), dilation=(1,1), use_deconv=True),
-            ConvBlock(16, 16, (1,5), stride=(1,2), padding=(0,2), groups=2, use_deconv=True, is_last=False),
-            ConvBlock(16, 2, (1,5), stride=(1,2), padding=(0,2), use_deconv=True, is_last=True)
+            GTConvBlock(self.channelsize, self.channelsize, (3,3), stride=(1,1), padding=(2*5,1), dilation=(5,1), use_deconv=True),
+            GTConvBlock(self.channelsize, self.channelsize, (3,3), stride=(1,1), padding=(2*2,1), dilation=(2,1), use_deconv=True),
+            GTConvBlock(self.channelsize, self.channelsize, (3,3), stride=(1,1), padding=(2*1,1), dilation=(1,1), use_deconv=True),
+            ConvBlock(self.channelsize, 24, (1,5), stride=(1,2), padding=(0,2), groups=2, use_deconv=True, is_last=False),
+            ConvBlock(24, 2, (1,5), stride=(1,2), padding=(0,2), use_deconv=True, is_last=True)
         ])
 
     def forward(self, x, en_outs):
@@ -285,14 +287,14 @@ class GTCRN(nn.Module):
         self.n_fft = n_fft
         self.hop_len = hop_len
         self.win_len = win_len
-        
+        self.channelsize = 32
         self.erb = ERB(65, 64)
         self.sfe = SFE(3, 1)
 
         self.encoder = Encoder()
         
-        self.dpgrnn1 = DPGRNN(16, 33, 16)
-        self.dpgrnn2 = DPGRNN(16, 33, 16)
+        self.dpgrnn1 = DPGRNN(self.channelsize, 33, self.channelsize)
+        self.dpgrnn2 = DPGRNN(self.channelsize, 33, self.channelsize)
         
         self.decoder = Decoder()
 
