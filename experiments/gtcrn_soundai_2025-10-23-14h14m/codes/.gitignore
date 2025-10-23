@@ -1,0 +1,7 @@
+__pycache__
+# experiments/
+*.wav
+*/__pycache__
+/prepare_datasets/dns3
+/prepare_datasets/noisy_16k_soundai_selfmade
+/prepare_datasets/soundai-val-test-wav

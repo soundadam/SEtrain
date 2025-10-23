@@ -1,0 +1,110 @@
+name: rlnet1
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  # Base Python and system libraries
+  - python=3.8
+  - pip
+  - setuptools
+  - wheel
+
+  # Core scientific computing packages (conda versions for faster resolution)
+  - numpy=1.24
+  - scipy=1.10
+  - pandas=2.0
+  - matplotlib=3.7
+  - scikit-learn=1.3
+
+  # PyTorch ecosystem (from pytorch channel for better optimization)
+  - pytorch=2.4.1
+  - torchaudio=2.4.1
+  - torchvision=0.19.1
+  - pytorch-cuda=12.1
+
+  # Audio processing
+  - librosa
+  - soundfile
+  - audioread
+  - ffmpeg
+
+  # Data formats and I/O
+  - h5py
+  - pyyaml
+  - netcdf4
+
+  # Image processing
+  - opencv
+  - pillow
+
+  # Development and utilities
+  - cython
+  - numba
+  - joblib
+  - tqdm
+  - click
+  - requests
+  - beautifulsoup4
+
+  # Jupyter and visualization (optional, uncomment if needed)
+  # - jupyter
+  # - ipython
+
+  # Machine Learning utilities
+  - tensorboard
+  - protobuf
+
+  # Packages only available via pip
+  - pip:
+      # Deep learning specific
+      - einops==0.8.1
+      - rotary-embedding-torch==0.8.3
+      - transformers==4.46.3
+      - tokenizers==0.20.3
+      - huggingface-hub==0.35.3
+      - safetensors==0.5.3
+
+      # Audio metrics and processing
+      - pesq==0.0.4
+      - pystoi==0.3.3
+      - pyloudnorm==0.1.1
+      - mir-eval==0.7
+      - musdb==0.4.3
+      - museval==0.4.1
+      - gammatone==1.0.3
+      - pysptk==1.0.1
+      - pyworld==0.3.4
+      - python-speech-features==0.6
+      - pymcd==0.2.1
+      - torch-complex==0.4.4
+
+      # Model utilities
+      - torchinfo==1.8.0
+      - torchmetrics==1.5.2
+      - ptflops==0.7.3
+      - onnxruntime==1.19.2
+
+      # Configuration and logging
+      - omegaconf==2.3.0
+      - loguru==0.7.3
+      - coloredlogs==15.0.1
+
+      # Data processing
+      - resampy==0.4.3
+      - soxr==0.3.7
+      - stempeg==0.2.4
+      - python-sofa==0.2.0
+      - mat73==0.65
+
+      # Utilities
+      - gdown==5.2.0
+      - pydub==0.25.1
+      - scenedetect==0.6.7.1
+      - xls-r-sqa==0.1.0
+
+      # Optional: less common packages
+      - antlr4-python3-runtime==4.9.3
+      - yamlargparse==1.31.1
+      - fastdtw==0.3.4

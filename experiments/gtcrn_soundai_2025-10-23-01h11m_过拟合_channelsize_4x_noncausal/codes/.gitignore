@@ -1,0 +1,4 @@
+__pycache__
+experiments/
+*.wav
+*/__pycache__

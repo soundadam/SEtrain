@@ -1,0 +1,25 @@
+# Neural Architecture Search Configuration for GTCRN
+
+# Architecture search space
+nas_config:
+  # Channel size - consistent across Encoder, Decoder, and GTCRN
+  channelsize: 64          # Options: [32, 64, 96, 128]
+                           # Lower: faster, less memory, potentially lower quality
+                           # Higher: slower, more memory, potentially better quality
+
+  # Number of GT blocks to repeat in Encoder and Decoder
+  gt_blocks_repeat: 4      # Options: [3, 4, 5, 6]
+                           # Lower: fewer parameters, faster inference
+                           # Higher: more capacity, better receptive field
+
+# Parameter sweep configuration
+sweep_config:
+  # Possible values for each parameter
+  channelsize_options: [32, 64, 96]
+  gt_blocks_repeat_options: [3, 4, 5, 6]
+
+  # Expected model complexity ranges (approximate)
+  # channelsize=32, gt_blocks=3:  ~15K params, 20 MMACs
+  # channelsize=64, gt_blocks=4:  ~24K params, 33 MMACs (baseline)
+  # channelsize=96, gt_blocks=5:  ~40K params, 55 MMACs
+  # channelsize=128, gt_blocks=6: ~70K params, 95 MMACs

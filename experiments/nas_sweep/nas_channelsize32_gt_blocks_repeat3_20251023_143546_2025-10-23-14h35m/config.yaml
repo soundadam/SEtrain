@@ -1,0 +1,71 @@
+network_config:
+  n_fft: 512
+  hop_len: 256
+  win_len: 512
+DDP:
+  device: 0,1
+  world_size: 2
+optimizer:
+  lr: 0.001
+scheduler:
+  kwargs:
+    warmup_steps: 2500
+    decay_until_step: 50000
+    max_lr: 0.001
+    min_lr: 5.0e-06
+  update_interval: step
+  use_plateau: false
+FFT:
+  n_fft: 512
+  hop_length: 256
+  win_length: 512
+loss:
+  n_fft: 512
+  hop_len: 256
+  win_len: 512
+  compress_factor: 0.3
+  eps: 1.0e-12
+  lamda_ri: 30
+  lamda_mag: 70
+train_dataset:
+  length_in_seconds: 10
+  num_data_tot: null
+  num_data_per_epoch: 20000
+  random_start_point: false
+  train: true
+train_dataloader:
+  batch_size: 36
+  num_workers: 12
+  drop_last: true
+  pin_memory: true
+validation_dataset:
+  length_in_seconds: 10
+  random_start_point: false
+  train: false
+validation_dataloader:
+  batch_size: 48
+  num_workers: 12
+  pin_memory: true
+samplerate: 16000
+trainer:
+  epochs: 150
+  save_checkpoint_interval: 20
+  clip_grad_norm_value: 3.0
+  exp_path: experiments/nas_sweep/nas_channelsize32_gt_blocks_repeat3_20251023_143546
+  resume: false
+  resume_datetime: 2024-12-31-14h28m
+  early_stopping_enabled: true
+  early_stopping_patience: 20
+nas_config:
+  channelsize: 64
+  gt_blocks_repeat: 4
+sweep_config:
+  channelsize_options:
+  - 32
+  - 64
+  - 96
+  gt_blocks_repeat_options:
+  - 3
+  - 4
+  - 5
+  - 6

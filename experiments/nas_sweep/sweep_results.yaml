@@ -1,0 +1,48 @@
+param_space:
+  channelsize:
+  - 32
+  - 64
+  - 96
+  - 128
+  gt_blocks_repeat:
+  - 3
+  - 4
+  - 5
+  - 6
+sweep_results:
+- error: Command '['/home/adam/miniforge3/envs/rlnet1/bin/python', 'train.py', '--config',
+    'experiments/nas_sweep/nas_channelsize32_gt_blocks_repeat3_20251023_143742_config.yaml']'
+    returned non-zero exit status 1.
+  exp_name: nas_channelsize32_gt_blocks_repeat3_20251023_143742
+  params:
+    channelsize: 32
+    gt_blocks_repeat: 3
+  status: failed
+  timestamp: '2025-10-23T14:38:35.059759'
+- error: Command '['/home/adam/miniforge3/envs/rlnet1/bin/python', 'train.py', '--config',
+    'experiments/nas_sweep/nas_channelsize32_gt_blocks_repeat4_20251023_143835_config.yaml']'
+    returned non-zero exit status 1.
+  exp_name: nas_channelsize32_gt_blocks_repeat4_20251023_143835
+  params:
+    channelsize: 32
+    gt_blocks_repeat: 4
+  status: failed
+  timestamp: '2025-10-23T14:39:28.277138'
+- error: Command '['/home/adam/miniforge3/envs/rlnet1/bin/python', 'train.py', '--config',
+    'experiments/nas_sweep/nas_channelsize32_gt_blocks_repeat5_20251023_143928_config.yaml']'
+    returned non-zero exit status 1.
+  exp_name: nas_channelsize32_gt_blocks_repeat5_20251023_143928
+  params:
+    channelsize: 32
+    gt_blocks_repeat: 5
+  status: failed
+  timestamp: '2025-10-23T14:40:20.775467'
+- error: Command '['/home/adam/miniforge3/envs/rlnet1/bin/python', 'train.py', '--config',
+    'experiments/nas_sweep/nas_channelsize32_gt_blocks_repeat6_20251023_144020_config.yaml']'
+    returned non-zero exit status 1.
+  exp_name: nas_channelsize32_gt_blocks_repeat6_20251023_144020
+  params:
+    channelsize: 32
+    gt_blocks_repeat: 6
+  status: failed
+  timestamp: '2025-10-23T14:41:12.733737'

@@ -4,7 +4,7 @@ network_config:
   win_len: 512
 
 DDP:
-  world_size: 4
+  device: 0,1
 
 optimizer:
   lr: 0.001
@@ -12,11 +12,12 @@ optimizer:
 scheduler:
   kwargs:
     warmup_steps: 2500
-    decay_until_step: 25000
+    decay_until_step: 50000
     max_lr: 1e-3
-    min_lr: 1e-6
+    min_lr: 5e-6
 
   update_interval: step  # [step, epoch]
+  use_plateau: False  # Set to True to use ReduceLROnPlateau based on SI-SDR
 
 FFT:
   n_fft: 512
@@ -33,32 +34,32 @@ loss:
   lamda_mag: 70
 
 train_dataset: 
-  length_in_seconds: 8
+  length_in_seconds: 10
   num_data_tot:   # 200 h
-  num_data_per_epoch: 40000
+  num_data_per_epoch: 8000
   random_start_point: False
   train: True
 
 train_dataloader: 
   batch_size: 24
-  num_workers: 6
+  num_workers: 12
   drop_last: True
   pin_memory: True
 
 validation_dataset: 
-  length_in_seconds: 6
+  length_in_seconds: 10
   random_start_point: False
   train: False
 
 validation_dataloader:
   batch_size: 36
-  num_workers: 8
+  num_workers: 12
   pin_memory: True
 
 samplerate: 16000
 
 trainer:
-  epochs: 200
+  epochs: 150
   save_checkpoint_interval: 20
   clip_grad_norm_value: 3.0
   exp_path: experiments/gtcrn_soundai
@@ -66,3 +67,7 @@ trainer:
   resume_datetime: 2024-12-31-14h28m
   # resume: True
   # resume_datetime: gtcrn_soundai_2025-10-22-06h18m
+
+  # Early stopping configuration
+  early_stopping_enabled: True
+  early_stopping_patience: 20  # Stop if no improvement for 20 epochs

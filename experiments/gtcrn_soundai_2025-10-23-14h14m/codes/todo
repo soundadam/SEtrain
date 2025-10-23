@@ -1,0 +1,5 @@
+check
+# 检查文件数目
+for d in */; do echo -n "$d: "; find "$d" -type f -name "*.flac" | wc -l; done 
+# 检查
+find -name "*.flac" | wc -l
