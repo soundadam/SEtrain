@@ -3,12 +3,12 @@
 # Architecture search space
 nas_config:
   # Channel size - consistent across Encoder, Decoder, and GTCRN
-  channelsize: 64          # Options: [32, 64, 96, 128]
+  channelsize: 128          # Options: [32, 64, 96, 128]
                            # Lower: faster, less memory, potentially lower quality
                            # Higher: slower, more memory, potentially better quality
 
   # Number of GT blocks to repeat in Encoder and Decoder
-  gt_blocks_repeat: 4      # Options: [3, 4, 5, 6]
+  gt_blocks_repeat: 6      # Options: [3, 4, 5, 6]
                            # Lower: fewer parameters, faster inference
                            # Higher: more capacity, better receptive field
 

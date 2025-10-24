@@ -4,7 +4,7 @@ network_config:
   win_len: 512
 
 DDP:
-  device: 0,1
+  device: 0,1,2,3
 
 optimizer:
   lr: 0.001
@@ -41,8 +41,8 @@ train_dataset:
   train: True
 
 train_dataloader: 
-  batch_size: 24
-  num_workers: 12
+  batch_size: 12
+  num_workers: 40
   drop_last: True
   pin_memory: True
 
@@ -52,14 +52,14 @@ validation_dataset:
   train: False
 
 validation_dataloader:
-  batch_size: 36
-  num_workers: 12
+  batch_size: 18
+  num_workers: 40
   pin_memory: True
 
 samplerate: 16000
 
 trainer:
-  epochs: 150
+  epochs: 200
   save_checkpoint_interval: 20
   clip_grad_norm_value: 3.0
   exp_path: experiments/gtcrn_soundai
